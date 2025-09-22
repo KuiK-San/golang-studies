@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -12,6 +15,7 @@ const monitoramentos = 3
 const delay = 5
 
 func main() {
+	getSitesFromFile()
 
 	for {
 		exibeMenu()
@@ -48,9 +52,9 @@ func captaOpcao() int {
 
 func monitoraSites() {
 	fmt.Println("Monitorando...")
-	sites := []string{"https://httpbin.org/status/200", "https://direcaosistemas.com.br/", "https://direcaomarcas.com.br/", "https://direcaomarcas.bitrix24.com.br"}
+	sites := getSitesFromFile()
 
-	for i := 0; i >= monitoramentos; i++ {
+	for i := 0; i <= monitoramentos; i++ {
 		for _, site := range sites {
 			testaSite(site)
 		}
@@ -67,11 +71,43 @@ func testaSite(site string) {
 		Timeout:   10 * time.Second,
 		Transport: tr,
 	}
-	resp, _ := client.Get(site) // http.Get(site)
+	resp, err := client.Get(site) // http.Get(site)
+
+	if err != nil {
+		fmt.Println("Ocorreu um erro na requisição:", err)
+	}
 
 	if resp.StatusCode == 200 {
 		fmt.Println("Site:", site, "funcionando normalmente.")
 	} else {
 		fmt.Println("Site:", site, "está com problemas. Status Code:", resp.StatusCode)
 	}
+}
+
+func getSitesFromFile() []string {
+	var sites []string
+	arquivo, err := os.Open("./sites.txt")
+
+	if err != nil {
+		fmt.Println("Ocorreu um erro:", err)
+	}
+
+	reader := bufio.NewReader(arquivo)
+	for {
+		line, err := reader.ReadString('\n')
+		line = strings.TrimSpace(line)
+		sites = append(sites, line)
+
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("Ocorreu um erro", err)
+		}
+
+	}
+
+	arquivo.Close()
+
+	return sites
 }
