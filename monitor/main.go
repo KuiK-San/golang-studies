@@ -1,24 +1,30 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
-	exibeMenu()
-	option := captaOpcao()
 
-	switch option {
-	case 1:
-		fmt.Println("Monitoramento Iniciado")
-	case 2:
-		fmt.Println("Logs exibidos")
-	case 0:
-		os.Exit(0)
-	default:
-		fmt.Println(option, "Não é esperado")
-		os.Exit(-1)
+	for {
+		exibeMenu()
+		option := captaOpcao()
+
+		switch option {
+		case 1:
+			monitoraSite()
+		case 2:
+			fmt.Println("Logs exibidos")
+		case 0:
+			os.Exit(0)
+		default:
+			fmt.Println(option, "Não é esperado")
+			os.Exit(-1)
+		}
 	}
 }
 
@@ -34,4 +40,25 @@ func captaOpcao() int {
 	fmt.Println("Foi escolhida a opção", option, "no endereco de memoria", &option)
 
 	return option
+}
+
+func monitoraSite() {
+	fmt.Println("Monitorando...")
+	site := "https://httpbin.org/status/200"
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: tr,
+	}
+
+	resp, _ := client.Get(site) // http.Get(site)
+
+	if resp.StatusCode == 200 {
+		fmt.Println("Site:", site, "funcionando normalmente.")
+	} else {
+		fmt.Println("Site:", site, "está com problemas. Status Code:", resp.StatusCode)
+	}
 }
