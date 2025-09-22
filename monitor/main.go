@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+const monitoramentos = 3
+const delay = 5
+
 func main() {
 
 	for {
@@ -16,7 +19,7 @@ func main() {
 
 		switch option {
 		case 1:
-			monitoraSite()
+			monitoraSites()
 		case 2:
 			fmt.Println("Logs exibidos")
 		case 0:
@@ -25,6 +28,7 @@ func main() {
 			fmt.Println(option, "Não é esperado")
 			os.Exit(-1)
 		}
+		fmt.Println("")
 	}
 }
 
@@ -42,10 +46,20 @@ func captaOpcao() int {
 	return option
 }
 
-func monitoraSite() {
+func monitoraSites() {
 	fmt.Println("Monitorando...")
-	site := "https://httpbin.org/status/200"
+	sites := []string{"https://httpbin.org/status/200", "https://direcaosistemas.com.br/", "https://direcaomarcas.com.br/", "https://direcaomarcas.bitrix24.com.br"}
 
+	for i := 0; i >= monitoramentos; i++ {
+		for _, site := range sites {
+			testaSite(site)
+		}
+		fmt.Println("")
+		time.Sleep(delay * time.Second)
+	}
+}
+
+func testaSite(site string) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -53,7 +67,6 @@ func monitoraSite() {
 		Timeout:   10 * time.Second,
 		Transport: tr,
 	}
-
 	resp, _ := client.Get(site) // http.Get(site)
 
 	if resp.StatusCode == 200 {
