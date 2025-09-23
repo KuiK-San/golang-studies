@@ -3,16 +3,42 @@ package main
 import (
 	"fmt"
 
+	"github.com/kuik/clientes"
 	"github.com/kuik/contas"
 )
 
+func PagarBoleto(conta verificarConta, valorBoleto float64) {
+	conta.Sacar(valorBoleto)
+}
+
+type verificarConta interface {
+	Sacar(valor float64) string
+}
+
 func main() {
-	conta1 := contas.ContaBanco{Titular: "Guilherme", Saldo: 500}
-	conta2 := contas.ContaBanco{Titular: "Guilherme2", Saldo: 500}
+	cliente1 := clientes.Titular{
+		Nome:      "Guilherme",
+		CPF:       "123.456.789-10",
+		Profissao: "DevOps",
+	}
+	conta1 := contas.ContaBanco{
+		Titular: cliente1,
+	}
+	conta1.Depositar(500)
 
-	status := conta2.Transferir(700, &conta1)
+	cliente2 := clientes.Titular{
+		Nome:      "Guilherme2",
+		CPF:       "123.456.789-10",
+		Profissao: "Desenvolvedor",
+	}
+	conta2 := contas.ContaPoupanca{
+		Titular: cliente2,
+	}
+	conta2.Depositar(500)
 
-	fmt.Println(status)
-	fmt.Println(conta1)
-	fmt.Println(conta2)
+	PagarBoleto(&conta1, 10)
+	PagarBoleto(&conta2, 20)
+
+	fmt.Println(conta1.GetSaldo())
+	fmt.Println(conta2.GetSaldo())
 }
