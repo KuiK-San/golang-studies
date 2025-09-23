@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -15,7 +15,6 @@ const monitoramentos = 3
 const delay = 5
 
 func main() {
-	getSitesFromFile()
 
 	for {
 		exibeMenu()
@@ -25,7 +24,7 @@ func main() {
 		case 1:
 			monitoraSites()
 		case 2:
-			fmt.Println("Logs exibidos")
+			imprimeLogs()
 		case 0:
 			os.Exit(0)
 		default:
@@ -64,14 +63,14 @@ func monitoraSites() {
 }
 
 func testaSite(site string) {
-	tr := &http.Transport{
+	/* tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{
 		Timeout:   10 * time.Second,
 		Transport: tr,
-	}
-	resp, err := client.Get(site) // http.Get(site)
+	} */
+	resp, err := http.Get(site) // client.Get(site)
 
 	if err != nil {
 		fmt.Println("Ocorreu um erro na requisição:", err)
@@ -79,8 +78,10 @@ func testaSite(site string) {
 
 	if resp.StatusCode == 200 {
 		fmt.Println("Site:", site, "funcionando normalmente.")
+		registraLog(site, true)
 	} else {
 		fmt.Println("Site:", site, "está com problemas. Status Code:", resp.StatusCode)
+		registraLog(site, false)
 	}
 }
 
@@ -110,4 +111,27 @@ func getSitesFromFile() []string {
 	arquivo.Close()
 
 	return sites
+}
+
+func registraLog(site string, status bool) {
+	arquivo, err := os.OpenFile("log.txt", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+
+	if err != nil {
+		fmt.Println("Erro ao executar:", err)
+	}
+
+	arquivo.WriteString(time.Now().Format("02/01/2006 15:04:05") + " - " + site + " - online: " + strconv.FormatBool(status) + "\n")
+
+	arquivo.Close()
+}
+
+func imprimeLogs() {
+	arquivo, err := os.ReadFile("./log.txt")
+
+	if err != nil {
+		fmt.Println("Deu erro: ", err)
+	}
+
+	fmt.Println(string(arquivo))
+
 }
